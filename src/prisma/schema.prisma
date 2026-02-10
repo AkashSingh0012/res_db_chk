@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model abstract_submission {
+  abstract_id       BigInt                        @id @default(autoincrement())
+  registration_id   BigInt                        @unique(map: "uq_one_abstract_per_registration")
+  salutation        String                        @db.VarChar(10)
+  first_name        String                        @db.VarChar(100)
+  last_name         String                        @db.VarChar(100)
+  designation       String                        @db.VarChar(150)
+  abstract_title    String                        @db.VarChar(500)
+  abstract_category String?                       @db.VarChar(150)
+  keywords          String?                       @db.VarChar(500)
+  file_name         String                        @db.VarChar(255)
+  file_type         abstract_submission_file_type
+  file_size_kb      Int
+  abstract_file     Bytes                         @db.MediumBlob
+  submission_date   DateTime?                     @default(now()) @db.Timestamp(0)
+  status            abstract_submission_status?   @default(SUBMITTED)
+  remarks           String?                       @db.Text
+  created_at        DateTime?                     @default(now()) @db.Timestamp(0)
+  updated_at        DateTime?                     @default(now()) @db.Timestamp(0)
+  registered_master registered_master             @relation(fields: [registration_id], references: [registration_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_abstract_registration")
+}
+
+model registered_master {
+  registration_id       BigInt                    @id @default(autoincrement())
+  delegate_type         String                    @db.VarChar(100)
+  salutation            String?                   @db.VarChar(10)
+  first_name            String                    @db.VarChar(100)
+  last_name             String                    @db.VarChar(100)
+  gender                registered_master_gender?
+  affiliation           String?                   @db.Text
+  email                 String                    @unique(map: "uq_registered_email") @db.VarChar(255)
+  contact_no            String?                   @db.VarChar(20)
+  city                  String?                   @db.VarChar(100)
+  postal_code           String?                   @db.VarChar(20)
+  category              String?                   @db.VarChar(150)
+  registration_fee_type String?                   @db.VarChar(255)
+  amount                Decimal                   @db.Decimal(10, 2)
+  payment_mode          String?                   @db.VarChar(50)
+  transaction_id        String?                   @db.VarChar(50)
+  transaction_date      DateTime?                 @db.Date
+  abstract_submitted    Boolean?                  @default(false)
+  abstract_submission   abstract_submission?
+}
+
+enum registered_master_gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum abstract_submission_file_type {
+  PDF
+  DOC
+  DOCX
+}
+
+enum abstract_submission_status {
+  SUBMITTED
+  UNDER_REVIEW
+  ACCEPTED
+  REJECTED
+  REVISION_REQUIRED
+}
