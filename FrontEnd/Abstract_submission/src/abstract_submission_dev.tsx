@@ -1,6 +1,7 @@
 import React, { useState } from "react";
+import "./abstract_submission.css";
 
-// 🔧 DEV FLAG — flip this to true when re-enabling file upload
+//  DEV FLAG — flip this to true when re-enabling file upload
 const ENABLE_FILE_UPLOAD = true;
 
 const Abstract_submission_dev = () => {
@@ -15,7 +16,7 @@ const Abstract_submission_dev = () => {
     keywords: ""
   });
 
-  // 🔹 Isolated file state (inactive for now)
+  //  Isolated file state (inactive for now)
   const [file, setFile] = useState<File | null>(null);
 
   const [message, setMessage] = useState("");
@@ -28,7 +29,7 @@ const Abstract_submission_dev = () => {
     });
   };
 
-  // 🔹 Isolated file handler (not used unless flag is true)
+  //  Isolated file handler (not used unless flag is true)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!ENABLE_FILE_UPLOAD) return;
 
@@ -87,7 +88,7 @@ const Abstract_submission_dev = () => {
         throw new Error(data.error || "Submission failed");
       }
 
-      setMessage("Abstract submitted successfully");
+      setMessage(" Abstract submitted successfully");
 
       setFormData({
         registration_id: "",
@@ -103,17 +104,18 @@ const Abstract_submission_dev = () => {
       setFile(null);
 
     } catch (err: any) {
-      setMessage(" ERROR " + err.message);
+      setMessage("Error: " + err.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={styles.container}>
-      <h2>Abstract Submission (Dev Mode)</h2>
+      <div className="abstract-container">
 
-      <form onSubmit={handleSubmit} style={styles.form}>
+      <h2>Abstract Submission </h2>
+
+      <form onSubmit={handleSubmit} className="abstract-form">
         <input name="registration_id" placeholder="Registration ID" value={formData.registration_id} onChange={handleChange} required />
         <select name="salutation" value={formData.salutation} onChange={handleChange} required>
           <option value="">Select Salutation</option>
@@ -129,7 +131,7 @@ const Abstract_submission_dev = () => {
         <input name="abstract_category" placeholder="Abstract Category" value={formData.abstract_category} onChange={handleChange} />
         <input name="keywords" placeholder="Keywords" value={formData.keywords} onChange={handleChange} />
 
-        {/* 🔹 File input rendered but isolated */}
+        {/* File input rendered but isolated */}
         {ENABLE_FILE_UPLOAD && (
           <input type="file" onChange={handleFileChange} />
         )}
@@ -139,28 +141,10 @@ const Abstract_submission_dev = () => {
         </button>
       </form>
 
-      {message && <p style={styles.message}>{message}</p>}
+      {message && <p className="abstract-message">{message}</p>}
+
     </div>
   );
-};
-
-const styles = {
-  container: {
-    maxWidth: "500px",
-    margin: "40px auto",
-    padding: "20px",
-    border: "1px solid #ccc",
-    borderRadius: "8px"
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px"
-  },
-  message: {
-    marginTop: "15px",
-    fontWeight: "bold"
-  }
 };
 
 export default Abstract_submission_dev;

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import AbstractSubmission from './abstract_submission_dev'
+import AbstractSubmission from './abstract_submission'
 
 export default function App() {
   return (
