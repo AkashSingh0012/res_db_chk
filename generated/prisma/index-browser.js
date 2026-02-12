@@ -121,7 +121,7 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
 });
 
 exports.Prisma.Registered_masterScalarFieldEnum = {
-  registration_id: 'registration_id',
+  transaction_id: 'transaction_id',
   delegate_type: 'delegate_type',
   salutation: 'salutation',
   first_name: 'first_name',
@@ -136,7 +136,6 @@ exports.Prisma.Registered_masterScalarFieldEnum = {
   registration_fee_type: 'registration_fee_type',
   amount: 'amount',
   payment_mode: 'payment_mode',
-  transaction_id: 'transaction_id',
   transaction_date: 'transaction_date',
   abstract_submitted: 'abstract_submitted',
   created_at: 'created_at',
@@ -145,7 +144,7 @@ exports.Prisma.Registered_masterScalarFieldEnum = {
 
 exports.Prisma.Abstract_submissionScalarFieldEnum = {
   abstract_id: 'abstract_id',
-  registration_id: 'registration_id',
+  transaction_id: 'transaction_id',
   salutation: 'salutation',
   first_name: 'first_name',
   last_name: 'last_name',
@@ -162,6 +161,52 @@ exports.Prisma.Abstract_submissionScalarFieldEnum = {
   remarks: 'remarks',
   created_at: 'created_at',
   updated_at: 'updated_at'
+};
+
+exports.Prisma.Award_pillarScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  created_at: 'created_at'
+};
+
+exports.Prisma.Award_categoryScalarFieldEnum = {
+  id: 'id',
+  pillar_id: 'pillar_id',
+  name: 'name',
+  description: 'description',
+  total_awards: 'total_awards',
+  age_limit: 'age_limit',
+  gender_restriction: 'gender_restriction',
+  created_at: 'created_at'
+};
+
+exports.Prisma.Award_focus_areaScalarFieldEnum = {
+  id: 'id',
+  category_id: 'category_id',
+  name: 'name'
+};
+
+exports.Prisma.Award_nominationScalarFieldEnum = {
+  id: 'id',
+  transaction_id: 'transaction_id',
+  category_id: 'category_id',
+  focus_area_id: 'focus_area_id',
+  nominee_name: 'nominee_name',
+  designation: 'designation',
+  organisation: 'organisation',
+  aadhaar: 'aadhaar',
+  pan: 'pan',
+  dossier_file: 'dossier_file',
+  dossier_filename: 'dossier_filename',
+  achievement_writeup: 'achievement_writeup',
+  status: 'status',
+  created_at: 'created_at'
+};
+
+exports.Prisma.Award_proof_linkScalarFieldEnum = {
+  id: 'id',
+  nomination_id: 'nomination_id',
+  url: 'url'
 };
 
 exports.Prisma.SortOrder = {
@@ -198,9 +243,22 @@ exports.abstract_submission_status = exports.$Enums.abstract_submission_status =
   REVISION_REQUIRED: 'REVISION_REQUIRED'
 };
 
+exports.nomination_status = exports.$Enums.nomination_status = {
+  SUBMITTED: 'SUBMITTED',
+  UNDER_REVIEW: 'UNDER_REVIEW',
+  SHORTLISTED: 'SHORTLISTED',
+  REJECTED: 'REJECTED',
+  AWARDED: 'AWARDED'
+};
+
 exports.Prisma.ModelName = {
   registered_master: 'registered_master',
-  abstract_submission: 'abstract_submission'
+  abstract_submission: 'abstract_submission',
+  award_pillar: 'award_pillar',
+  award_category: 'award_category',
+  award_focus_area: 'award_focus_area',
+  award_nomination: 'award_nomination',
+  award_proof_link: 'award_proof_link'
 };
 
 /**

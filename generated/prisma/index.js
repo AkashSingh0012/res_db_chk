@@ -94,7 +94,7 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
 });
 
 exports.Prisma.Registered_masterScalarFieldEnum = {
-  registration_id: 'registration_id',
+  transaction_id: 'transaction_id',
   delegate_type: 'delegate_type',
   salutation: 'salutation',
   first_name: 'first_name',
@@ -109,7 +109,6 @@ exports.Prisma.Registered_masterScalarFieldEnum = {
   registration_fee_type: 'registration_fee_type',
   amount: 'amount',
   payment_mode: 'payment_mode',
-  transaction_id: 'transaction_id',
   transaction_date: 'transaction_date',
   abstract_submitted: 'abstract_submitted',
   created_at: 'created_at',
@@ -118,7 +117,7 @@ exports.Prisma.Registered_masterScalarFieldEnum = {
 
 exports.Prisma.Abstract_submissionScalarFieldEnum = {
   abstract_id: 'abstract_id',
-  registration_id: 'registration_id',
+  transaction_id: 'transaction_id',
   salutation: 'salutation',
   first_name: 'first_name',
   last_name: 'last_name',
@@ -135,6 +134,52 @@ exports.Prisma.Abstract_submissionScalarFieldEnum = {
   remarks: 'remarks',
   created_at: 'created_at',
   updated_at: 'updated_at'
+};
+
+exports.Prisma.Award_pillarScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  created_at: 'created_at'
+};
+
+exports.Prisma.Award_categoryScalarFieldEnum = {
+  id: 'id',
+  pillar_id: 'pillar_id',
+  name: 'name',
+  description: 'description',
+  total_awards: 'total_awards',
+  age_limit: 'age_limit',
+  gender_restriction: 'gender_restriction',
+  created_at: 'created_at'
+};
+
+exports.Prisma.Award_focus_areaScalarFieldEnum = {
+  id: 'id',
+  category_id: 'category_id',
+  name: 'name'
+};
+
+exports.Prisma.Award_nominationScalarFieldEnum = {
+  id: 'id',
+  transaction_id: 'transaction_id',
+  category_id: 'category_id',
+  focus_area_id: 'focus_area_id',
+  nominee_name: 'nominee_name',
+  designation: 'designation',
+  organisation: 'organisation',
+  aadhaar: 'aadhaar',
+  pan: 'pan',
+  dossier_file: 'dossier_file',
+  dossier_filename: 'dossier_filename',
+  achievement_writeup: 'achievement_writeup',
+  status: 'status',
+  created_at: 'created_at'
+};
+
+exports.Prisma.Award_proof_linkScalarFieldEnum = {
+  id: 'id',
+  nomination_id: 'nomination_id',
+  url: 'url'
 };
 
 exports.Prisma.SortOrder = {
@@ -171,9 +216,22 @@ exports.abstract_submission_status = exports.$Enums.abstract_submission_status =
   REVISION_REQUIRED: 'REVISION_REQUIRED'
 };
 
+exports.nomination_status = exports.$Enums.nomination_status = {
+  SUBMITTED: 'SUBMITTED',
+  UNDER_REVIEW: 'UNDER_REVIEW',
+  SHORTLISTED: 'SHORTLISTED',
+  REJECTED: 'REJECTED',
+  AWARDED: 'AWARDED'
+};
+
 exports.Prisma.ModelName = {
   registered_master: 'registered_master',
-  abstract_submission: 'abstract_submission'
+  abstract_submission: 'abstract_submission',
+  award_pillar: 'award_pillar',
+  award_category: 'award_category',
+  award_focus_area: 'award_focus_area',
+  award_nomination: 'award_nomination',
+  award_proof_link: 'award_proof_link'
 };
 /**
  * Create the Client
@@ -183,10 +241,10 @@ const config = {
   "clientVersion": "7.3.0",
   "engineVersion": "9d6ad21cbbceab97458517b147a6a09ff43aa735",
   "activeProvider": "postgresql",
-  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nmodel registered_master {\n  registration_id BigInt @id @default(autoincrement())\n\n  delegate_type String                    @db.VarChar(100)\n  salutation    String?                   @db.VarChar(10)\n  first_name    String                    @db.VarChar(100)\n  last_name     String                    @db.VarChar(100)\n  gender        registered_master_gender?\n\n  affiliation String? @db.Text\n\n  email      String  @unique(map: \"uq_registered_email\") @db.VarChar(255)\n  contact_no String? @db.VarChar(20)\n\n  city        String? @db.VarChar(100)\n  postal_code String? @db.VarChar(20)\n\n  category              String? @db.VarChar(150)\n  registration_fee_type String? @db.VarChar(255)\n\n  amount Decimal @db.Decimal(10, 2)\n\n  payment_mode     String?   @db.VarChar(50)\n  transaction_id   String?   @db.VarChar(100)\n  transaction_date DateTime? @db.Date\n\n  abstract_submitted Boolean @default(false)\n\n  created_at DateTime @default(now()) @db.Timestamptz(6)\n  updated_at DateTime @updatedAt @db.Timestamptz(6)\n\n  // 1:1 relation\n  abstract_submission abstract_submission?\n\n  @@index([email])\n  @@index([transaction_id])\n  @@index([delegate_type])\n}\n\nmodel abstract_submission {\n  abstract_id BigInt @id @default(autoincrement())\n\n  // 1:1 relation via unique FK\n  registration_id BigInt @unique(map: \"uq_one_abstract_per_registration\")\n\n  salutation  String @db.VarChar(10)\n  first_name  String @db.VarChar(100)\n  last_name   String @db.VarChar(100)\n  designation String @db.VarChar(150)\n\n  abstract_title    String  @db.VarChar(500)\n  abstract_category String? @db.VarChar(150)\n  keywords          String? @db.VarChar(500)\n\n  file_name    String                        @db.VarChar(255)\n  file_type    abstract_submission_file_type\n  file_size_kb Int\n\n  // PostgreSQL blob type\n  abstract_file Bytes\n\n  submission_date DateTime @default(now()) @db.Timestamptz(6)\n\n  status abstract_submission_status @default(SUBMITTED)\n\n  remarks String? @db.Text\n\n  created_at DateTime @default(now()) @db.Timestamptz(6)\n  updated_at DateTime @updatedAt @db.Timestamptz(6)\n\n  registered_master registered_master @relation(fields: [registration_id], references: [registration_id], onDelete: Cascade)\n\n  @@index([registration_id])\n  @@index([status])\n  @@index([submission_date])\n  @@index([abstract_category])\n}\n\nenum registered_master_gender {\n  MALE\n  FEMALE\n  OTHER\n}\n\nenum abstract_submission_file_type {\n  PDF\n  DOC\n  DOCX\n}\n\nenum abstract_submission_status {\n  SUBMITTED\n  UNDER_REVIEW\n  ACCEPTED\n  REJECTED\n  REVISION_REQUIRED\n}\n"
+  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nmodel registered_master {\n  transaction_id String @id @db.VarChar(100)\n\n  delegate_type String                    @db.VarChar(100)\n  salutation    String?                   @db.VarChar(10)\n  first_name    String                    @db.VarChar(100)\n  last_name     String                    @db.VarChar(100)\n  gender        registered_master_gender?\n\n  affiliation String? @db.Text\n\n  email      String  @unique(map: \"uq_registered_email\") @db.VarChar(255)\n  contact_no String? @db.VarChar(20)\n\n  city        String? @db.VarChar(100)\n  postal_code String? @db.VarChar(20)\n\n  category              String? @db.VarChar(150)\n  registration_fee_type String? @db.VarChar(255)\n\n  amount Decimal @db.Decimal(10, 2)\n\n  payment_mode     String?\n  transaction_date DateTime? @db.Date\n\n  abstract_submitted Boolean @default(false)\n\n  created_at DateTime @default(now()) @db.Timestamptz(6)\n  updated_at DateTime @updatedAt @db.Timestamptz(6)\n\n  // 1:1 relation\n  abstract_submission abstract_submission?\n  awardNominations    award_nomination[]\n\n  @@index([email])\n  @@index([delegate_type])\n}\n\nmodel abstract_submission {\n  abstract_id BigInt @id @default(autoincrement())\n\n  transaction_id String @unique @db.VarChar(100)\n\n  salutation  String @db.VarChar(10)\n  first_name  String @db.VarChar(100)\n  last_name   String @db.VarChar(100)\n  designation String @db.VarChar(150)\n\n  abstract_title    String  @db.VarChar(500)\n  abstract_category String? @db.VarChar(150)\n  keywords          String? @db.VarChar(500)\n\n  file_name     String                        @db.VarChar(255)\n  file_type     abstract_submission_file_type\n  file_size_kb  Int\n  abstract_file Bytes\n\n  submission_date DateTime                   @default(now()) @db.Timestamptz(6)\n  status          abstract_submission_status @default(SUBMITTED)\n\n  remarks String? @db.Text\n\n  created_at DateTime @default(now()) @db.Timestamptz(6)\n  updated_at DateTime @updatedAt @db.Timestamptz(6)\n\n  registered_master registered_master @relation(fields: [transaction_id], references: [transaction_id], onDelete: Cascade)\n\n  @@index([transaction_id])\n  @@index([status])\n  @@index([submission_date])\n  @@index([abstract_category])\n}\n\nenum registered_master_gender {\n  MALE\n  FEMALE\n  OTHER\n}\n\nenum abstract_submission_file_type {\n  PDF\n  DOC\n  DOCX\n}\n\nenum abstract_submission_status {\n  SUBMITTED\n  UNDER_REVIEW\n  ACCEPTED\n  REJECTED\n  REVISION_REQUIRED\n}\n\nmodel award_pillar {\n  id   BigInt @id @default(autoincrement())\n  name String @db.VarChar(200)\n\n  categories award_category[]\n\n  created_at DateTime @default(now()) @db.Timestamptz(6)\n}\n\nmodel award_category {\n  id        BigInt @id @default(autoincrement())\n  pillar_id BigInt\n\n  name        String  @db.VarChar(250)\n  description String? @db.Text\n\n  total_awards Int\n\n  age_limit          Int?\n  gender_restriction String?\n\n  pillar award_pillar @relation(fields: [pillar_id], references: [id], onDelete: Cascade)\n\n  focus_areas award_focus_area[]\n\n  nominations award_nomination[]\n\n  created_at DateTime @default(now()) @db.Timestamptz(6)\n\n  @@index([pillar_id])\n}\n\nmodel award_focus_area {\n  id          BigInt @id @default(autoincrement())\n  category_id BigInt\n\n  name String @db.VarChar(200)\n\n  category         award_category     @relation(fields: [category_id], references: [id], onDelete: Cascade)\n  awardNominations award_nomination[]\n\n  @@index([category_id])\n}\n\nmodel award_nomination {\n  id BigInt @id @default(autoincrement())\n\n  transaction_id String @db.VarChar(100)\n\n  category_id   BigInt\n  focus_area_id BigInt?\n\n  nominee_name String @db.VarChar(200)\n  designation  String @db.VarChar(150)\n  organisation String @db.VarChar(255)\n\n  aadhaar String? @db.VarChar(20)\n  pan     String? @db.VarChar(20)\n\n  dossier_file     Bytes\n  dossier_filename String @db.VarChar(255)\n\n  achievement_writeup String @db.Text\n\n  status nomination_status @default(SUBMITTED)\n\n  registered_master registered_master @relation(fields: [transaction_id], references: [transaction_id], onDelete: Cascade)\n\n  category   award_category    @relation(fields: [category_id], references: [id])\n  focus_area award_focus_area? @relation(fields: [focus_area_id], references: [id])\n\n  proof_links award_proof_link[]\n\n  created_at DateTime @default(now()) @db.Timestamptz(6)\n\n  @@index([transaction_id])\n  @@index([category_id])\n}\n\nmodel award_proof_link {\n  id            BigInt @id @default(autoincrement())\n  nomination_id BigInt\n\n  url String @db.VarChar(500)\n\n  nomination award_nomination @relation(fields: [nomination_id], references: [id], onDelete: Cascade)\n}\n\nenum nomination_status {\n  SUBMITTED\n  UNDER_REVIEW\n  SHORTLISTED\n  REJECTED\n  AWARDED\n}\n"
 }
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"registered_master\":{\"fields\":[{\"name\":\"registration_id\",\"kind\":\"scalar\",\"type\":\"BigInt\"},{\"name\":\"delegate_type\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"salutation\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"first_name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"last_name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"gender\",\"kind\":\"enum\",\"type\":\"registered_master_gender\"},{\"name\":\"affiliation\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"contact_no\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"city\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"postal_code\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"category\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"registration_fee_type\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"amount\",\"kind\":\"scalar\",\"type\":\"Decimal\"},{\"name\":\"payment_mode\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"transaction_id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"transaction_date\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"abstract_submitted\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updated_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"abstract_submission\",\"kind\":\"object\",\"type\":\"abstract_submission\",\"relationName\":\"abstract_submissionToregistered_master\"}],\"dbName\":null},\"abstract_submission\":{\"fields\":[{\"name\":\"abstract_id\",\"kind\":\"scalar\",\"type\":\"BigInt\"},{\"name\":\"registration_id\",\"kind\":\"scalar\",\"type\":\"BigInt\"},{\"name\":\"salutation\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"first_name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"last_name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"designation\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"abstract_title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"abstract_category\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"keywords\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"file_name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"file_type\",\"kind\":\"enum\",\"type\":\"abstract_submission_file_type\"},{\"name\":\"file_size_kb\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"abstract_file\",\"kind\":\"scalar\",\"type\":\"Bytes\"},{\"name\":\"submission_date\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"abstract_submission_status\"},{\"name\":\"remarks\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updated_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"registered_master\",\"kind\":\"object\",\"type\":\"registered_master\",\"relationName\":\"abstract_submissionToregistered_master\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"registered_master\":{\"fields\":[{\"name\":\"transaction_id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"delegate_type\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"salutation\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"first_name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"last_name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"gender\",\"kind\":\"enum\",\"type\":\"registered_master_gender\"},{\"name\":\"affiliation\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"contact_no\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"city\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"postal_code\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"category\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"registration_fee_type\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"amount\",\"kind\":\"scalar\",\"type\":\"Decimal\"},{\"name\":\"payment_mode\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"transaction_date\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"abstract_submitted\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updated_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"abstract_submission\",\"kind\":\"object\",\"type\":\"abstract_submission\",\"relationName\":\"abstract_submissionToregistered_master\"},{\"name\":\"awardNominations\",\"kind\":\"object\",\"type\":\"award_nomination\",\"relationName\":\"award_nominationToregistered_master\"}],\"dbName\":null},\"abstract_submission\":{\"fields\":[{\"name\":\"abstract_id\",\"kind\":\"scalar\",\"type\":\"BigInt\"},{\"name\":\"transaction_id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"salutation\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"first_name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"last_name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"designation\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"abstract_title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"abstract_category\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"keywords\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"file_name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"file_type\",\"kind\":\"enum\",\"type\":\"abstract_submission_file_type\"},{\"name\":\"file_size_kb\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"abstract_file\",\"kind\":\"scalar\",\"type\":\"Bytes\"},{\"name\":\"submission_date\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"abstract_submission_status\"},{\"name\":\"remarks\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updated_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"registered_master\",\"kind\":\"object\",\"type\":\"registered_master\",\"relationName\":\"abstract_submissionToregistered_master\"}],\"dbName\":null},\"award_pillar\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"BigInt\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"categories\",\"kind\":\"object\",\"type\":\"award_category\",\"relationName\":\"award_categoryToaward_pillar\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"award_category\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"BigInt\"},{\"name\":\"pillar_id\",\"kind\":\"scalar\",\"type\":\"BigInt\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"total_awards\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"age_limit\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"gender_restriction\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"pillar\",\"kind\":\"object\",\"type\":\"award_pillar\",\"relationName\":\"award_categoryToaward_pillar\"},{\"name\":\"focus_areas\",\"kind\":\"object\",\"type\":\"award_focus_area\",\"relationName\":\"award_categoryToaward_focus_area\"},{\"name\":\"nominations\",\"kind\":\"object\",\"type\":\"award_nomination\",\"relationName\":\"award_categoryToaward_nomination\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"award_focus_area\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"BigInt\"},{\"name\":\"category_id\",\"kind\":\"scalar\",\"type\":\"BigInt\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"category\",\"kind\":\"object\",\"type\":\"award_category\",\"relationName\":\"award_categoryToaward_focus_area\"},{\"name\":\"awardNominations\",\"kind\":\"object\",\"type\":\"award_nomination\",\"relationName\":\"award_focus_areaToaward_nomination\"}],\"dbName\":null},\"award_nomination\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"BigInt\"},{\"name\":\"transaction_id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"category_id\",\"kind\":\"scalar\",\"type\":\"BigInt\"},{\"name\":\"focus_area_id\",\"kind\":\"scalar\",\"type\":\"BigInt\"},{\"name\":\"nominee_name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"designation\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"organisation\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"aadhaar\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"pan\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"dossier_file\",\"kind\":\"scalar\",\"type\":\"Bytes\"},{\"name\":\"dossier_filename\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"achievement_writeup\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"nomination_status\"},{\"name\":\"registered_master\",\"kind\":\"object\",\"type\":\"registered_master\",\"relationName\":\"award_nominationToregistered_master\"},{\"name\":\"category\",\"kind\":\"object\",\"type\":\"award_category\",\"relationName\":\"award_categoryToaward_nomination\"},{\"name\":\"focus_area\",\"kind\":\"object\",\"type\":\"award_focus_area\",\"relationName\":\"award_focus_areaToaward_nomination\"},{\"name\":\"proof_links\",\"kind\":\"object\",\"type\":\"award_proof_link\",\"relationName\":\"award_nominationToaward_proof_link\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"award_proof_link\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"BigInt\"},{\"name\":\"nomination_id\",\"kind\":\"scalar\",\"type\":\"BigInt\"},{\"name\":\"url\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"nomination\",\"kind\":\"object\",\"type\":\"award_nomination\",\"relationName\":\"award_nominationToaward_proof_link\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.compilerWasm = {
       getRuntime: async () => require('./query_compiler_fast_bg.js'),
