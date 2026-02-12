@@ -4,77 +4,85 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  
 }
 
 model registered_master {
-  transaction_id String @id @db.VarChar(100)
+  registration_id       BigInt   @id @default(autoincrement())
 
-  delegate_type String                    @db.VarChar(100)
-  salutation    String?                   @db.VarChar(10)
-  first_name    String                    @db.VarChar(100)
-  last_name     String                    @db.VarChar(100)
-  gender        registered_master_gender?
+  delegate_type         String   @db.VarChar(100)
+  salutation            String?  @db.VarChar(10)
+  first_name            String   @db.VarChar(100)
+  last_name             String   @db.VarChar(100)
+  gender                registered_master_gender?
 
-  affiliation String? @db.Text
+  affiliation           String?  @db.Text
 
-  email      String  @unique(map: "uq_registered_email") @db.VarChar(255)
-  contact_no String? @db.VarChar(20)
+  email                 String   @unique(map: "uq_registered_email") @db.VarChar(255)
+  contact_no            String?  @db.VarChar(20)
 
-  city        String? @db.VarChar(100)
-  postal_code String? @db.VarChar(20)
+  city                  String?  @db.VarChar(100)
+  postal_code           String?  @db.VarChar(20)
 
-  category              String? @db.VarChar(150)
-  registration_fee_type String? @db.VarChar(255)
+  category              String?  @db.VarChar(150)
+  registration_fee_type String?  @db.VarChar(255)
 
-  amount Decimal @db.Decimal(10, 2)
+  amount                Decimal  @db.Decimal(10,2)
 
-  payment_mode     String?
-  transaction_date DateTime? @db.Date
+  payment_mode          String?  @db.VarChar(50)
+  transaction_id        String?  @db.VarChar(100)
+  transaction_date      DateTime? @db.Date
 
-  abstract_submitted Boolean @default(false)
+  abstract_submitted    Boolean  @default(false)
 
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @updatedAt @db.Timestamptz(6)
+  created_at            DateTime @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime @updatedAt @db.Timestamptz(6)
 
   // 1:1 relation
-  abstract_submission abstract_submission?
-  awardNominations    award_nomination[]
+  abstract_submission   abstract_submission?
 
   @@index([email])
+  @@index([transaction_id])
   @@index([delegate_type])
 }
 
 model abstract_submission {
-  abstract_id BigInt @id @default(autoincrement())
+  abstract_id       BigInt  @id @default(autoincrement())
 
-  transaction_id String @unique @db.VarChar(100)
+  // 1:1 relation via unique FK
+  registration_id   BigInt  @unique(map: "uq_one_abstract_per_registration")
 
-  salutation  String @db.VarChar(10)
-  first_name  String @db.VarChar(100)
-  last_name   String @db.VarChar(100)
-  designation String @db.VarChar(150)
+  salutation        String  @db.VarChar(10)
+  first_name        String  @db.VarChar(100)
+  last_name         String  @db.VarChar(100)
+  designation       String  @db.VarChar(150)
 
   abstract_title    String  @db.VarChar(500)
   abstract_category String? @db.VarChar(150)
   keywords          String? @db.VarChar(500)
 
-  file_name     String                        @db.VarChar(255)
-  file_type     abstract_submission_file_type
-  file_size_kb  Int
-  abstract_file Bytes
+  file_name         String  @db.VarChar(255)
+  file_type         abstract_submission_file_type
+  file_size_kb      Int
 
-  submission_date DateTime                   @default(now()) @db.Timestamptz(6)
-  status          abstract_submission_status @default(SUBMITTED)
+  // PostgreSQL blob type
+ abstract_file     Bytes
 
-  remarks String? @db.Text
+submission_date   DateTime @default(now()) @db.Timestamptz(6)
 
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @updatedAt @db.Timestamptz(6)
+status            abstract_submission_status @default(SUBMITTED)
 
-  registered_master registered_master @relation(fields: [transaction_id], references: [transaction_id], onDelete: Cascade)
+remarks           String? @db.Text
 
-  @@index([transaction_id])
+created_at        DateTime @default(now()) @db.Timestamptz(6)
+updated_at        DateTime @updatedAt @db.Timestamptz(6)
+
+registered_master registered_master @relation(fields: [registration_id], references: [registration_id], onDelete: Cascade)
+
+
+  @@index([registration_id])
   @@index([status])
   @@index([submission_date])
   @@index([abstract_category])
@@ -98,100 +106,5 @@ enum abstract_submission_status {
   ACCEPTED
   REJECTED
   REVISION_REQUIRED
-}
-
-model award_pillar {
-  id   BigInt @id @default(autoincrement())
-  name String @db.VarChar(200)
-
-  categories award_category[]
-
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-}
-
-model award_category {
-  id        BigInt @id @default(autoincrement())
-  pillar_id BigInt
-
-  name        String  @db.VarChar(250)
-  description String? @db.Text
-
-  total_awards Int
-
-  age_limit          Int?
-  gender_restriction String?
-
-  pillar award_pillar @relation(fields: [pillar_id], references: [id], onDelete: Cascade)
-
-  focus_areas award_focus_area[]
-
-  nominations award_nomination[]
-
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-
-  @@index([pillar_id])
-}
-
-model award_focus_area {
-  id          BigInt @id @default(autoincrement())
-  category_id BigInt
-
-  name String @db.VarChar(200)
-
-  category         award_category     @relation(fields: [category_id], references: [id], onDelete: Cascade)
-  awardNominations award_nomination[]
-
-  @@index([category_id])
-}
-
-model award_nomination {
-  id BigInt @id @default(autoincrement())
-
-  transaction_id String @db.VarChar(100)
-
-  category_id   BigInt
-  focus_area_id BigInt?
-
-  nominee_name String @db.VarChar(200)
-  designation  String @db.VarChar(150)
-  organisation String @db.VarChar(255)
-
-  aadhaar String? @db.VarChar(20)
-  pan     String? @db.VarChar(20)
-
-  dossier_file     Bytes
-  dossier_filename String @db.VarChar(255)
-
-  achievement_writeup String @db.Text
-
-  status nomination_status @default(SUBMITTED)
-
-  registered_master registered_master @relation(fields: [transaction_id], references: [transaction_id], onDelete: Cascade)
-
-  category   award_category    @relation(fields: [category_id], references: [id])
-  focus_area award_focus_area? @relation(fields: [focus_area_id], references: [id])
-
-  proof_links award_proof_link[]
-
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-
-  @@index([transaction_id])
-  @@index([category_id])
-}
-
-model award_proof_link {
-  id            BigInt @id @default(autoincrement())
-  nomination_id BigInt
-
-  url String @db.VarChar(500)
-
-  nomination award_nomination @relation(fields: [nomination_id], references: [id], onDelete: Cascade)
-}
-
-enum nomination_status {
-  SUBMITTED
-  UNDER_REVIEW
-  SHORTLISTED
-  REJECTED
-  AWARDED
+RDED
 }
